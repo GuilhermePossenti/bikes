@@ -1,4 +1,4 @@
-# Bikes — Atividade: Alterar Senha
+# Bikes Atividade: Alterar Senha
 
 API REST em Spring Boot com PostgreSQL e documentação em Swagger (SpringDoc OpenAPI).
 
