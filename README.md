@@ -48,3 +48,31 @@ Novo tratamento para a `PasswordInvalidException`, que devolve **400 Bad Request
   "novaSenha": "654321",
   "confirmacaoSenha": "654321"
 }
+```
+
+# Atividade 02: Teste de Alterar Senha
+
+## O que a atividade pede
+
+Desenvolver métodos de teste para as 4 possibilidades da alteração de senha: sucesso, senha atual inválida, senha e confirmação que não conferem e campos inválidos (vazios, senhas com menos e com mais de 6 caracteres). Como o endpoint não retorna corpo, os testes verificam apenas o status.
+
+## O que foi feito
+
+### `UsuarioAlterarSenhaTest` (pasta `src/test`)
+Usa `@SpringBootTest` com `MockMvc` para chamar o `PATCH /api/v1/usuarios/{id}`. Antes de cada teste é criado um usuário com a senha `123456`, que é apagado no final.
+
+| Teste | Situação | Status esperado |
+|---|---|---|
+| `alterarSenha_comDadosValidos_retornarStatus204` | Senha atual correta e confirmação igual | `isNoContent()` (204) |
+| `alterarSenha_comSenhaAtualInvalida_retornarStatus400` | Senha atual errada | `isBadRequest()` (400) |
+| `alterarSenha_comSenhaEConfirmacaoDiferentes_retornarStatus400` | Nova senha diferente da confirmação | `isBadRequest()` (400) |
+| `alterarSenha_comCamposInvalidos_retornarStatus422` | Campos vazios, com 5 e com 7 caracteres | `isUnprocessableContent()` (422) |
+
+### `application.properties` de teste (pasta `src/test/resources`)
+Os testes usam um banco H2 em memória, então rodam sem precisar do PostgreSQL ligado.
+
+## Como rodar
+
+```
+./mvnw test
+```
