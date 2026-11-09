@@ -76,3 +76,77 @@ Os testes usam um banco H2 em memória, então rodam sem precisar do PostgreSQL 
 ```
 ./mvnw test
 ```
+
+# Atividade 03: Recurso Cliente
+
+## O que a atividade pede
+
+Criar o recurso **Cliente** (`id`, `nome`, `cpf` único e método `equals`). Um cliente só pode ser cadastrado por um usuário autenticado, o cliente consulta apenas os próprios dados e o Admin consulta os dados de todos. O recurso precisa de DTOs, Controller, Service e Repository, deve ser protegido com autenticação, documentado com SpringDoc OpenAPI/Swagger, ter validação dos campos de entrada e os mesmos campos de auditoria de `Usuario`.
+
+## O que foi feito
+
+### Autenticação com JWT (Spring Security)
+O projeto ainda não tinha autenticação, então ela foi criada primeiro:
+
+- `POST /api/v1/auth` recebe `username` e `password` (`UsuarioLoginDTO`) e devolve um token JWT, válido por 30 minutos.
+- Nas outras requisições, o token vai no header `Authorization: Bearer <token>`.
+- Pacote `jwt`: `JwtUtils` (gera e valida o token), `JwtAuthorizationFilter` (lê o token em cada requisição), `JwtUserDetailsService` e `JwtUserDetails` (usuário logado, com `id` e `role`) e `JwtAuthenticationEntryPoint` (resposta 401).
+- `SpringSecurityConfig`: só o cadastro de usuário, o login e a documentação ficam livres. O restante exige token. As regras por perfil ficam no `@PreAuthorize` de cada endpoint.
+- As senhas agora são salvas com **BCrypt**. Por isso, o cadastro e a alteração de senha da Atividade 01 passaram a usar o `PasswordEncoder`.
+
+### Auditoria
+`SpringJpaAuditingConfig` ativa o JPA Auditing. `dataCriacao`, `dataModificacao`, `criadoPor` e `modificadoPor` agora são preenchidos automaticamente em `Usuario` e `Cliente`, e o "por" é o username do usuário logado.
+
+### Recurso Cliente
+- `Cliente` (entidade): `id`, `nome`, `cpf` (único, 11 dígitos), `usuario` (`@OneToOne`, também único: cada usuário tem no máximo um cliente), campos de auditoria, `equals` e `hashCode` pelo `id`.
+- `ClienteRequestDTO`: `nome` obrigatório (3 a 100 caracteres) e `cpf` obrigatório, com 11 dígitos sem pontuação e validado pelo `@CPF` (dígitos verificadores). O usuário **não** vem no corpo: é sempre o usuário do token.
+- `ClienteResponseDTO`, `ClienteMapper` (MapStruct), `ClienteRepository`, `ClienteService` e `ClienteController`.
+- `ClienteUniqueViolationException` → **409** quando o CPF já existe ou o usuário já tem cliente.
+
+### Endpoints do Cliente
+
+| Método e caminho | Quem pode | Descrição |
+|---|---|---|
+| `POST /api/v1/clientes` | CLIENTE | Cadastra o cliente do usuário logado |
+| `GET /api/v1/clientes/detalhes` | CLIENTE | Consulta apenas os próprios dados |
+| `GET /api/v1/clientes/{id}` | ADMIN | Consulta qualquer cliente |
+| `GET /api/v1/clientes` | ADMIN | Lista todos os clientes |
+
+### Endpoints de Usuário (agora protegidos)
+
+| Método e caminho | Quem pode |
+|---|---|
+| `POST /api/v1/usuarios` | Livre (cadastro) |
+| `GET /api/v1/usuarios/{id}` | ADMIN, ou o próprio usuário |
+| `PATCH /api/v1/usuarios/{id}` | Só o próprio usuário |
+| `GET /api/v1/usuarios` | ADMIN |
+
+### Respostas
+
+| Situação | Status |
+|---|---|
+| Sem token ou token inválido | 401 |
+| Logado, mas sem permissão (perfil errado ou dados de outro usuário) | 403 |
+| Login com credenciais erradas | 400 |
+| CPF repetido ou usuário que já tem cliente | 409 |
+| Campos inválidos | 422 |
+
+### Swagger
+A documentação em `http://localhost:8080/docs-bikes.html` tem o botão **Authorize**, onde se cola o token. Os endpoints protegidos aparecem com cadeado.
+
+### Testes
+- `ClienteTest`: login, senha criptografada, cadastro (201, 401, 403, 409, 422), auditoria, consultas do cliente e do admin, e documentação.
+- `UsuarioAlterarSenhaTest`: os testes da Atividade 02 agora fazem login antes. Foram adicionados os casos sem token (401) e de alterar a senha de outro usuário (403).
+
+## Como testar manualmente
+
+1. `POST /api/v1/usuarios` com `{"username":"maria@email.com","password":"123456"}`
+2. `POST /api/v1/auth` com os mesmos dados e copiar o `token`
+3. `POST /api/v1/clientes` com o header `Authorization: Bearer <token>` e `{"nome":"Maria Silva","cpf":"52998224725"}`
+
+Para ter um ADMIN, altere o `role` do usuário direto no banco:
+```sql
+UPDATE usuarios SET role = 'ADMIN' WHERE username = 'admin@email.com';
+```
+
+> Usuários cadastrados antes desta atividade têm a senha em texto puro e não conseguem fazer login. Cadastre-os de novo.
