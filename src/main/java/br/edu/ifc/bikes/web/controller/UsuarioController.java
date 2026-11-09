@@ -10,12 +10,16 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import static br.edu.ifc.bikes.config.SpringDocOpenApiConfig.SECURITY;
 
 import java.util.List;
 
@@ -42,14 +46,21 @@ public class UsuarioController {
         return ResponseEntity.status(HttpStatus.CREATED).body(usuarioCriado);
     }
 
-    @Operation(summary = "Recuperar um usuário pelo id", description = "Recuperar um usuário pelo id",
+    @Operation(summary = "Recuperar um usuário pelo id",
+        description = "ADMIN recupera qualquer usuário; CLIENTE recupera apenas o próprio usuário.",
+        security = @SecurityRequirement(name = SECURITY),
         responses = {
                 @ApiResponse(responseCode = "200", description = "Recurso recuperado com sucesso",
                         content = @Content(mediaType = "application/json", schema = @Schema(implementation = UsuarioResponseDTO.class))),
+                @ApiResponse(responseCode = "401", description = "Usuário não autenticado",
+                        content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
+                @ApiResponse(responseCode = "403", description = "Usuário sem permissão para acessar este recurso",
+                        content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
                 @ApiResponse(responseCode = "404", description = "Recurso não encontrado",
                         content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class)))
         })
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('CLIENTE') and #id == authentication.principal.id)")
     public ResponseEntity<UsuarioResponseDTO> getById(@PathVariable Long id) {
         UsuarioResponseDTO usuario = usuarioService.getById(id);
 
@@ -61,20 +72,40 @@ public class UsuarioController {
     }
 
     //o PATCH deve ser utilizado, no lugar no PUT, quando a atualização for de poucos campos.
+    @Operation(summary = "Alterar a senha", description = "Cada usuário altera apenas a própria senha.",
+            security = @SecurityRequirement(name = SECURITY),
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Senha alterada com sucesso"),
+                    @ApiResponse(responseCode = "400", description = "Senha atual não confere ou confirmação diferente",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
+                    @ApiResponse(responseCode = "401", description = "Usuário não autenticado",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
+                    @ApiResponse(responseCode = "403", description = "Usuário sem permissão para acessar este recurso",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
+                    @ApiResponse(responseCode = "422", description = "Campo(s) inválido(s)",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class)))
+            })
     @PatchMapping("/{id}")
+    @PreAuthorize("#id == authentication.principal.id")
     public ResponseEntity<Void> updatePassword(@PathVariable Long id, @Valid @RequestBody UsuarioSenhaDTO dto){
         usuarioService.updatePassword(id, dto);
         return ResponseEntity.noContent().build();
     }
 
 
-    @Operation(summary = "Listar todos os usuários", description = "Listar todos os usuários",
+    @Operation(summary = "Listar todos os usuários", description = "Listar todos os usuários. Requer perfil 'ADMIN'.",
+            security = @SecurityRequirement(name = SECURITY),
             responses = {
                     @ApiResponse(responseCode = "200", description = "Lista com todos os usuários cadastrados",
                         content = @Content(mediaType = "application/json",
-                        array = @ArraySchema(schema = @Schema(implementation = UsuarioResponseDTO.class))))
+                        array = @ArraySchema(schema = @Schema(implementation = UsuarioResponseDTO.class)))),
+                    @ApiResponse(responseCode = "401", description = "Usuário não autenticado",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
+                    @ApiResponse(responseCode = "403", description = "Recurso não permitido ao perfil CLIENTE",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class)))
             })
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UsuarioResponseDTO>> getAll(){
         List<UsuarioResponseDTO> usuarios = usuarioService.getAll();
         return ResponseEntity.ok(usuarios);

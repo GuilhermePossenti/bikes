@@ -5,6 +5,11 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -17,6 +22,7 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "usuarios")
+@EntityListeners(AuditingEntityListener.class) //preenche os campos de auditoria
 public class Usuario implements java.io.Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,9 +40,13 @@ public class Usuario implements java.io.Serializable {
     @Column(name="role", nullable = false, length = 50)
     private Role role = Role.CLIENTE;
 
+    @CreatedDate
     private LocalDateTime dataCriacao;
+    @LastModifiedDate
     private LocalDateTime dataModificacao;
+    @CreatedBy
     private String criadoPor;
+    @LastModifiedBy
     private String modificadoPor;
 
     public enum Role {
@@ -45,9 +55,13 @@ public class Usuario implements java.io.Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) return false;
         if (obj == this) return true;
-        Usuario usuario = (Usuario) obj;
+        if (!(obj instanceof Usuario usuario)) return false;
         return Objects.equals(id, usuario.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
     }
 }
