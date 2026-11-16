@@ -1,5 +1,6 @@
 package br.edu.ifc.bikes.web.exception;
 
+import br.edu.ifc.bikes.exception.BikeUniqueViolationException;
 import br.edu.ifc.bikes.exception.ClienteUniqueViolationException;
 import br.edu.ifc.bikes.exception.EntityNotFoundException;
 import br.edu.ifc.bikes.exception.PasswordInvalidException;
@@ -41,7 +42,8 @@ public class ApiExceptionHandler {
                 .body(new ErrorMessage(request, HttpStatus.FORBIDDEN, "Usuário sem permissão para acessar este recurso"));
     }
 
-    @ExceptionHandler({UsernameUniqueViolationException.class, ClienteUniqueViolationException.class})
+    @ExceptionHandler({UsernameUniqueViolationException.class, ClienteUniqueViolationException.class,
+            BikeUniqueViolationException.class})
     public ResponseEntity<ErrorMessage> usernameUniqueViolationException(
             RuntimeException ex,
             HttpServletRequest request){
