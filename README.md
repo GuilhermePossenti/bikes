@@ -150,3 +150,49 @@ UPDATE usuarios SET role = 'ADMIN' WHERE username = 'admin@email.com';
 ```
 
 > Usuários cadastrados antes desta atividade têm a senha em texto puro e não conseguem fazer login. Cadastre-os de novo.
+
+# Atividade 04: Recurso Bike
+
+## O que a atividade pede
+
+Criar o recurso **Bike** com DTOs, Controller, Service e Repository, protegido com autenticação, documentado com SpringDoc OpenAPI/Swagger, com validação dos campos de entrada e os mesmos campos de auditoria de `Usuario` e `Cliente`.
+
+## O que foi feito
+
+### Recurso Bike
+- `Bike` (entidade): `id`, `codigo` (único), `modelo`, `marca`, `cor`, `status`, campos de auditoria, `equals` e `hashCode` pelo `id`.
+- `Status` (enum dentro de `Bike`): `DISPONIVEL`, `ALUGADA` e `MANUTENCAO`. Toda bike é cadastrada como `DISPONIVEL`.
+- `BikeRequestDTO`: `codigo` obrigatório (3 a 20 caracteres: letras maiúsculas, números ou hífen), `modelo` (2 a 100), `marca` (2 a 50) e `cor` (3 a 30), todos obrigatórios. O status **não** vem no corpo.
+- `BikeStatusDTO`: `status` obrigatório, aceita apenas `DISPONIVEL`, `ALUGADA` ou `MANUTENCAO`.
+- `BikeResponseDTO`, `BikeMapper` (MapStruct), `BikeRepository`, `BikeService` e `BikeController`.
+- `BikeUniqueViolationException` → **409** quando o código já existe. Registrada no `ApiExceptionHandler`.
+
+### Endpoints da Bike
+
+| Método e caminho | Quem pode | Descrição |
+|---|---|---|
+| `POST /api/v1/bikes` | ADMIN | Cadastra uma bike |
+| `GET /api/v1/bikes` | ADMIN | Lista todas as bikes |
+| `GET /api/v1/bikes/disponiveis` | ADMIN ou CLIENTE | Lista as bikes disponíveis |
+| `GET /api/v1/bikes/{id}` | ADMIN ou CLIENTE | Consulta uma bike |
+| `PATCH /api/v1/bikes/{id}/status` | ADMIN | Altera o status da bike |
+
+### Respostas
+
+| Situação | Status |
+|---|---|
+| Sem token ou token inválido | 401 |
+| Logado, mas sem permissão | 403 |
+| Bike não encontrada | 404 |
+| Código de bike repetido | 409 |
+| Campos ou status inválidos | 422 |
+
+### Swagger
+Os endpoints aparecem na tag **Bikes** em `http://localhost:8080/docs-bikes.html`, com cadeado.
+
+## Como testar manualmente
+
+1. `POST /api/v1/auth` com um usuário ADMIN e copiar o `token`
+2. `POST /api/v1/bikes` com o header `Authorization: Bearer <token>` e `{"codigo":"BK-001","modelo":"Caloi 10","marca":"Caloi","cor":"Vermelha"}`
+3. `PATCH /api/v1/bikes/1/status` com `{"status":"MANUTENCAO"}`
+4. Com um usuário CLIENTE, `GET /api/v1/bikes/disponiveis`
