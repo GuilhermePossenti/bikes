@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport
+              name="clientes" language="java" pageWidth="595" pageHeight="842" columnWidth="555"
+              leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20"
+              whenNoDataType="AllSectionsNoDetail">
+
+    <parameter name="GERADO_EM" class="java.lang.String"/>
+    <parameter name="LOGO" class="java.awt.Image"/>
+    <parameter name="TOTAL_CLIENTES" class="java.lang.String"/>
+
+    <field name="id" class="java.lang.String"/>
+    <field name="nome" class="java.lang.String"/>
+    <field name="cpf" class="java.lang.String"/>
+
+    <title height="84">
+        <element kind="image" x="0" y="4" width="64" height="64">
+            <expression><![CDATA[$P{LOGO}]]></expression>
+        </element>
+        <element kind="staticText" x="78" y="6" width="400" height="34" fontSize="26.0" bold="true" forecolor="#1B7F5C" vTextAlign="Middle">
+            <text><![CDATA[Locabike]]></text>
+        </element>
+        <element kind="staticText" x="78" y="42" width="400" height="22" fontSize="13.0" forecolor="#555555" vTextAlign="Middle">
+            <text><![CDATA[Relatório de Clientes]]></text>
+        </element>
+        <element kind="line" x="0" y="76" width="555" height="1">
+            <pen lineWidth="2.0" lineColor="#1B7F5C"/>
+        </element>
+    </title>
+
+    <columnHeader height="26">
+        <element kind="staticText" x="0" y="0" width="60" height="26" mode="Opaque" backcolor="#1B7F5C" forecolor="#FFFFFF" bold="true" vTextAlign="Middle">
+            <text><![CDATA[ID]]></text>
+            <box leftPadding="6"/>
+        </element>
+        <element kind="staticText" x="60" y="0" width="335" height="26" mode="Opaque" backcolor="#1B7F5C" forecolor="#FFFFFF" bold="true" vTextAlign="Middle">
+            <text><![CDATA[Nome]]></text>
+            <box leftPadding="6"/>
+        </element>
+        <element kind="staticText" x="395" y="0" width="160" height="26" mode="Opaque" backcolor="#1B7F5C" forecolor="#FFFFFF" bold="true" vTextAlign="Middle">
+            <text><![CDATA[CPF]]></text>
+            <box leftPadding="6"/>
+        </element>
+    </columnHeader>
+
+    <detail>
+        <band height="24">
+            <element kind="rectangle" x="0" y="0" width="555" height="24" mode="Opaque" backcolor="#EEF6F2">
+                <printWhenExpression><![CDATA[$V{REPORT_COUNT} % 2 == 0]]></printWhenExpression>
+                <pen lineWidth="0.0"/>
+            </element>
+            <element kind="line" x="0" y="23" width="555" height="1">
+                <pen lineWidth="0.5" lineColor="#C9D8D0"/>
+            </element>
+            <element kind="textField" x="0" y="0" width="60" height="24" vTextAlign="Middle">
+                <expression><![CDATA[$F{id}]]></expression>
+                <box leftPadding="6"/>
+            </element>
+            <element kind="textField" x="60" y="0" width="335" height="24" vTextAlign="Middle">
+                <expression><![CDATA[$F{nome}]]></expression>
+                <box leftPadding="6"/>
+            </element>
+            <element kind="textField" x="395" y="0" width="160" height="24" vTextAlign="Middle">
+                <expression><![CDATA[$F{cpf}]]></expression>
+                <box leftPadding="6"/>
+            </element>
+        </band>
+    </detail>
+
+    <pageFooter height="24">
+        <element kind="textField" x="0" y="4" width="400" height="16" fontSize="9.0" forecolor="#555555">
+            <expression><![CDATA["Gerado em " + $P{GERADO_EM}]]></expression>
+        </element>
+        <element kind="textField" x="400" y="4" width="155" height="16" fontSize="9.0" forecolor="#555555" hTextAlign="Right">
+            <expression><![CDATA["Página " + $V{PAGE_NUMBER}]]></expression>
+        </element>
+    </pageFooter>
+
+    <summary height="76">
+        <element kind="rectangle" x="0" y="12" width="555" height="56" mode="Opaque" backcolor="#EEF6F2">
+            <pen lineWidth="0.75" lineColor="#1B7F5C"/>
+        </element>
+        <element kind="staticText" x="16" y="18" width="200" height="16" fontSize="9.0" forecolor="#555555">
+            <text><![CDATA[TOTAL DE CLIENTES]]></text>
+        </element>
+        <element kind="textField" x="16" y="34" width="200" height="28" fontSize="18.0" bold="true" forecolor="#1B7F5C">
+            <expression><![CDATA[$P{TOTAL_CLIENTES}]]></expression>
+        </element>
+    </summary>
+</jasperReport>
