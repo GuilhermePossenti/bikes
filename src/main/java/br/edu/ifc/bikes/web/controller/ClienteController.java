@@ -5,6 +5,7 @@ import br.edu.ifc.bikes.dto.ClienteRequestDTO;
 import br.edu.ifc.bikes.dto.ClienteResponseDTO;
 import br.edu.ifc.bikes.jwt.JwtUserDetails;
 import br.edu.ifc.bikes.service.ClienteService;
+import br.edu.ifc.bikes.service.JasperService;
 import br.edu.ifc.bikes.web.exception.ErrorMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -16,7 +17,9 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -33,6 +36,7 @@ import java.util.List;
 public class ClienteController {
 
     private final ClienteService clienteService;
+    private final JasperService jasperService;
 
     @Operation(summary = "Criar um novo cliente",
             description = "Recurso para criar um cliente vinculado ao usuário autenticado. Requer perfil 'CLIENTE'.",
@@ -72,6 +76,26 @@ public class ClienteController {
     @PreAuthorize("hasRole('CLIENTE')")
     public ResponseEntity<ClienteResponseDTO> getDetalhes(@AuthenticationPrincipal JwtUserDetails userDetails) {
         return ResponseEntity.ok(clienteService.getByUsuarioId(userDetails.getId()));
+    }
+
+    @Operation(summary = "Relatório de clientes em PDF",
+            description = "Gera um PDF com todos os clientes cadastrados. Requer perfil 'ADMIN'.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "PDF gerado com sucesso",
+                            content = @Content(mediaType = "application/pdf")),
+                    @ApiResponse(responseCode = "401", description = "Usuário não autenticado",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
+                    @ApiResponse(responseCode = "403", description = "Recurso não permitido ao perfil CLIENTE",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class)))
+            })
+    @GetMapping("/relatorio")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<byte[]> gerarRelatorio() {
+        byte[] pdf = jasperService.gerarRelatorioClientes(clienteService.getAll());
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=clientes-" + System.currentTimeMillis() + ".pdf")
+                .body(pdf);
     }
 
     @Operation(summary = "Recuperar um cliente pelo id",

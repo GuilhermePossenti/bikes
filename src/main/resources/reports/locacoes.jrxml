@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport
+              name="locacoes" language="java" orientation="Landscape" pageWidth="842" pageHeight="595" columnWidth="802"
+              leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20"
+              whenNoDataType="AllSectionsNoDetail">
+
+    <parameter name="GERADO_EM" class="java.lang.String"/>
+    <parameter name="LOGO" class="java.awt.Image"/>
+    <parameter name="TOTAL_LOCACOES" class="java.lang.String"/>
+    <parameter name="TOTAL_ATIVAS" class="java.lang.String"/>
+    <parameter name="TOTAL_FINALIZADAS" class="java.lang.String"/>
+    <parameter name="TOTAL_FATURADO" class="java.lang.String"/>
+
+    <field name="nomeCliente" class="java.lang.String"/>
+    <field name="codigoBike" class="java.lang.String"/>
+    <field name="dataRetirada" class="java.lang.String"/>
+    <field name="dataDevolucao" class="java.lang.String"/>
+    <field name="duracao" class="java.lang.String"/>
+    <field name="valor" class="java.lang.String"/>
+    <field name="status" class="java.lang.String"/>
+
+    <title height="84">
+        <element kind="image" x="0" y="4" width="64" height="64">
+            <expression><![CDATA[$P{LOGO}]]></expression>
+        </element>
+        <element kind="staticText" x="78" y="6" width="500" height="34" fontSize="26.0" bold="true" forecolor="#1B7F5C" vTextAlign="Middle">
+            <text><![CDATA[Locabike]]></text>
+        </element>
+        <element kind="staticText" x="78" y="42" width="500" height="22" fontSize="13.0" forecolor="#555555" vTextAlign="Middle">
+            <text><![CDATA[Relatório de Locações e Devoluções]]></text>
+        </element>
+        <element kind="line" x="0" y="76" width="802" height="1">
+            <pen lineWidth="2.0" lineColor="#1B7F5C"/>
+        </element>
+    </title>
+
+    <columnHeader height="26">
+        <element kind="staticText" x="0" y="0" width="200" height="26" mode="Opaque" backcolor="#1B7F5C" forecolor="#FFFFFF" bold="true" vTextAlign="Middle">
+            <text><![CDATA[Cliente]]></text>
+            <box leftPadding="6"/>
+        </element>
+        <element kind="staticText" x="200" y="0" width="80" height="26" mode="Opaque" backcolor="#1B7F5C" forecolor="#FFFFFF" bold="true" vTextAlign="Middle">
+            <text><![CDATA[Bike]]></text>
+            <box leftPadding="6"/>
+        </element>
+        <element kind="staticText" x="280" y="0" width="130" height="26" mode="Opaque" backcolor="#1B7F5C" forecolor="#FFFFFF" bold="true" vTextAlign="Middle">
+            <text><![CDATA[Retirada]]></text>
+            <box leftPadding="6"/>
+        </element>
+        <element kind="staticText" x="410" y="0" width="130" height="26" mode="Opaque" backcolor="#1B7F5C" forecolor="#FFFFFF" bold="true" vTextAlign="Middle">
+            <text><![CDATA[Devolução]]></text>
+            <box leftPadding="6"/>
+        </element>
+        <element kind="staticText" x="540" y="0" width="80" height="26" mode="Opaque" backcolor="#1B7F5C" forecolor="#FFFFFF" bold="true" vTextAlign="Middle">
+            <text><![CDATA[Duração]]></text>
+            <box leftPadding="6"/>
+        </element>
+        <element kind="staticText" x="620" y="0" width="80" height="26" mode="Opaque" backcolor="#1B7F5C" forecolor="#FFFFFF" bold="true" hTextAlign="Right" vTextAlign="Middle">
+            <text><![CDATA[Valor]]></text>
+            <box rightPadding="6"/>
+        </element>
+        <element kind="staticText" x="700" y="0" width="102" height="26" mode="Opaque" backcolor="#1B7F5C" forecolor="#FFFFFF" bold="true" vTextAlign="Middle">
+            <text><![CDATA[Status]]></text>
+            <box leftPadding="10"/>
+        </element>
+    </columnHeader>
+
+    <detail>
+        <band height="24">
+            <element kind="rectangle" x="0" y="0" width="802" height="24" mode="Opaque" backcolor="#EEF6F2">
+                <printWhenExpression><![CDATA[$V{REPORT_COUNT} % 2 == 0]]></printWhenExpression>
+                <pen lineWidth="0.0"/>
+            </element>
+            <element kind="line" x="0" y="23" width="802" height="1">
+                <pen lineWidth="0.5" lineColor="#C9D8D0"/>
+            </element>
+            <element kind="textField" x="0" y="0" width="200" height="24" vTextAlign="Middle">
+                <expression><![CDATA[$F{nomeCliente}]]></expression>
+                <box leftPadding="6"/>
+            </element>
+            <element kind="textField" x="200" y="0" width="80" height="24" vTextAlign="Middle">
+                <expression><![CDATA[$F{codigoBike}]]></expression>
+                <box leftPadding="6"/>
+            </element>
+            <element kind="textField" x="280" y="0" width="130" height="24" vTextAlign="Middle">
+                <expression><![CDATA[$F{dataRetirada}]]></expression>
+                <box leftPadding="6"/>
+            </element>
+            <element kind="textField" x="410" y="0" width="130" height="24" vTextAlign="Middle">
+                <expression><![CDATA[$F{dataDevolucao}]]></expression>
+                <box leftPadding="6"/>
+            </element>
+            <element kind="textField" x="540" y="0" width="80" height="24" vTextAlign="Middle">
+                <expression><![CDATA[$F{duracao}]]></expression>
+                <box leftPadding="6"/>
+            </element>
+            <element kind="textField" x="620" y="0" width="80" height="24" hTextAlign="Right" vTextAlign="Middle">
+                <expression><![CDATA[$F{valor}]]></expression>
+                <box rightPadding="6"/>
+            </element>
+            <element kind="textField" x="700" y="0" width="102" height="24" bold="true" vTextAlign="Middle">
+                <expression><![CDATA[$F{status}]]></expression>
+                <box leftPadding="10"/>
+            </element>
+        </band>
+    </detail>
+
+    <pageFooter height="24">
+        <element kind="textField" x="0" y="4" width="600" height="16" fontSize="9.0" forecolor="#555555">
+            <expression><![CDATA["Gerado em " + $P{GERADO_EM}]]></expression>
+        </element>
+        <element kind="textField" x="600" y="4" width="202" height="16" fontSize="9.0" forecolor="#555555" hTextAlign="Right">
+            <expression><![CDATA["Página " + $V{PAGE_NUMBER}]]></expression>
+        </element>
+    </pageFooter>
+
+    <summary height="76">
+        <element kind="rectangle" x="0" y="12" width="802" height="56" mode="Opaque" backcolor="#EEF6F2">
+            <pen lineWidth="0.75" lineColor="#1B7F5C"/>
+        </element>
+        <element kind="staticText" x="16" y="18" width="180" height="16" fontSize="9.0" forecolor="#555555">
+            <text><![CDATA[TOTAL DE LOCAÇÕES]]></text>
+        </element>
+        <element kind="textField" x="16" y="34" width="180" height="28" fontSize="18.0" bold="true" forecolor="#1B7F5C">
+            <expression><![CDATA[$P{TOTAL_LOCACOES}]]></expression>
+        </element>
+        <element kind="staticText" x="216" y="18" width="180" height="16" fontSize="9.0" forecolor="#555555">
+            <text><![CDATA[ATIVAS]]></text>
+        </element>
+        <element kind="textField" x="216" y="34" width="180" height="28" fontSize="18.0" bold="true" forecolor="#1B7F5C">
+            <expression><![CDATA[$P{TOTAL_ATIVAS}]]></expression>
+        </element>
+        <element kind="staticText" x="416" y="18" width="180" height="16" fontSize="9.0" forecolor="#555555">
+            <text><![CDATA[FINALIZADAS]]></text>
+        </element>
+        <element kind="textField" x="416" y="34" width="180" height="28" fontSize="18.0" bold="true" forecolor="#1B7F5C">
+            <expression><![CDATA[$P{TOTAL_FINALIZADAS}]]></expression>
+        </element>
+        <element kind="staticText" x="616" y="18" width="170" height="16" fontSize="9.0" forecolor="#555555" hTextAlign="Right">
+            <text><![CDATA[TOTAL FATURADO]]></text>
+        </element>
+        <element kind="textField" x="616" y="34" width="170" height="28" fontSize="18.0" bold="true" forecolor="#1B7F5C" hTextAlign="Right">
+            <expression><![CDATA[$P{TOTAL_FATURADO}]]></expression>
+        </element>
+    </summary>
+</jasperReport>

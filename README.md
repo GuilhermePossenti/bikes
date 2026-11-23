@@ -196,3 +196,101 @@ Os endpoints aparecem na tag **Bikes** em `http://localhost:8080/docs-bikes.html
 2. `POST /api/v1/bikes` com o header `Authorization: Bearer <token>` e `{"codigo":"BK-001","modelo":"Caloi 10","marca":"Caloi","cor":"Vermelha"}`
 3. `PATCH /api/v1/bikes/1/status` com `{"status":"MANUTENCAO"}`
 4. Com um usuário CLIENTE, `GET /api/v1/bikes/disponiveis`
+
+# Atividade 05: Locações, Devoluções e Relatório
+
+## O que a atividade pede
+
+Permitir que o cliente alugue uma bike informando o cartão de crédito, registrar a devolução calculando o valor a ser debitado e gerar um relatório de locações e devoluções. Uma bike não pode participar de duas locações ao mesmo tempo.
+
+## O que foi feito
+
+### Recurso Locação
+- `Locacao` (entidade): `cliente`, `bike`, `dataRetirada`, `dataPrevistaDevolucao`, `dataDevolucao`, `valor`, `status` (`ATIVA` ou `FINALIZADA`), dados do cartão (veja abaixo) e os campos de auditoria.
+- `LocacaoRequestDTO`: `bikeId`, `horasPrevistas` (1 a 72), `numeroCartao` (13 a 19 dígitos, validado pelo algoritmo de Luhn), `nomeTitular`, `validade` (`MM/AA`) e `cvv`. O cliente **não** vem no corpo: é o usuário do token.
+- `LocacaoDevolucaoDTO` (corpo opcional da devolução): `bikeComProblema`.
+- `LocacaoResponseDTO` e `LocacaoRelatorioDTO`, `LocacaoRepository`, `LocacaoService` e `LocacaoController`.
+- `LocacaoConflictException` → **409**.
+
+### Regras
+- **Alugar:** a bike precisa estar `DISPONIVEL`; ela passa a `ALUGADA`. A linha da bike é bloqueada no banco durante a transação (`PESSIMISTIC_WRITE`), então duas locações simultâneas da mesma bike nunca passam juntas.
+- **Cartão:** só o titular e os **4 últimos dígitos** são guardados. O número completo e o CVV são descartados e nunca aparecem nas respostas.
+- **Devolver:** registra a data/hora efetiva, calcula o valor e deixa a bike `DISPONIVEL`. Com `{"bikeComProblema": true}`, a bike vai para `MANUTENCAO`.
+- **Valor:** preço por hora **proporcional ao tempo efetivo**, contado em minutos arredondados para cima (mínimo de 1 minuto). O preço da hora fica em `locacao.preco-hora` no `application.properties`. O sistema apenas calcula e apresenta o valor; não há cobrança real no cartão.
+
+### Endpoints
+
+| Método e caminho | Quem pode | Descrição |
+|---|---|---|
+| `POST /api/v1/locacoes` | CLIENTE | Solicita o aluguel de uma bike |
+| `PATCH /api/v1/locacoes/{id}/devolucao` | CLIENTE (as próprias) ou ADMIN | Registra a devolução |
+| `GET /api/v1/locacoes/{id}` | CLIENTE (as próprias) ou ADMIN | Consulta uma locação |
+| `GET /api/v1/locacoes/relatorio` | ADMIN | Relatório de locações e devoluções |
+| `GET /api/v1/bikes/codigo/{codigo}` | ADMIN | Localiza a bike pelo código |
+
+O relatório traz, para cada locação: nome do cliente, código da bike, data de retirada, data de devolução, duração em minutos e status. As mais recentes vêm primeiro; se a locação ainda está ativa, a duração é o tempo até agora.
+
+### Respostas
+
+| Situação | Status |
+|---|---|
+| Sem token ou token inválido | 401 |
+| Perfil sem permissão, ou locação de outro cliente | 403 |
+| Bike, locação ou cadastro de cliente não encontrado | 404 |
+| Bike indisponível, ou locação já devolvida | 409 |
+| Campos inválidos (inclui cartão inválido) | 422 |
+
+### Testes
+- `LocacaoTest`: aluguel (201, 401, 403, 404, 409, 422), devolução (normal, com problema, repetida, de outro cliente), consulta, relatório, bike pelo código e cálculo do valor.
+- `UsuarioTest`: cadastro de usuário (válido, username repetido, username inválido, senha inválida), busca por id (existente, inexistente, sem permissão) e listagem.
+
+## Exemplo de requisição
+
+`POST /api/v1/locacoes`
+
+```json
+{
+  "bikeId": 1,
+  "horasPrevistas": 2,
+  "numeroCartao": "4111111111111111",
+  "nomeTitular": "Maria Silva",
+  "validade": "12/30",
+  "cvv": "123"
+}
+```
+
+# Atividade 06: Relatórios em PDF com Jasper
+
+## O que a atividade pede
+
+Gerar relatórios em PDF com o JasperReports e expor um endpoint para o administrador baixar o relatório de clientes.
+
+## O que foi feito
+
+### Dependências (`pom.xml`)
+`jasperreports` e `jasperreports-pdf` (7.0.8), mais `jasperreports-jdt` (compila as expressões do modelo) e `jasperreports-fonts` (fontes embutidas no PDF).
+
+### Modelos (`src/main/resources/reports`)
+- `clientes.jrxml`: relatório de clientes (ID, nome e CPF formatado) com o total de clientes no fim, em A4 retrato.
+- `locacoes.jrxml`: relatório de locações e devoluções (cliente, bike, retirada, devolução, duração, valor e status), em A4 paisagem. No fim traz o total de locações, as ativas, as finalizadas e o total faturado.
+- `images/logo.png`: logo da Locabike, exibida no topo dos dois relatórios. O `JasperService` a carrega uma vez e a passa ao modelo pelo parâmetro `LOGO`.
+
+Os dois têm cabeçalho verde, linhas alternadas e divisórias. Com as tabelas vazias, os relatórios saem só com cabeçalho e totais zerados (`whenNoDataType="AllSectionsNoDetail"`).
+
+Os modelos são os arquivos-fonte `.jrxml`, que também abrem no Jaspersoft Studio. O `JasperService` compila cada um na primeira vez que é usado e guarda o resultado em memória. Os dados vêm das consultas da aplicação, não de uma conexão JDBC do Studio.
+
+> No formato do Jasper 7, o `<jasperReport>` **não** pode ter `xmlns`. Com ele o modelo não carrega ("Unable to load report").
+
+### Endpoints (só ADMIN)
+
+| Método e caminho | Descrição |
+|---|---|
+| `GET /api/v1/clientes/relatorio` | PDF com todos os clientes |
+| `GET /api/v1/locacoes/relatorio/pdf` | PDF com todas as locações (o `.../relatorio` continua devolvendo JSON) |
+
+Os dois respondem `application/pdf` e retornam 401 sem token e 403 para o perfil CLIENTE. O token vai no cabeçalho `Authorization`, então digitar a URL no navegador não funciona: use o botão **Download file** do Swagger (depois de **Authorize**) ou **Send and Download** no Postman.
+
+O valor de cada locação é calculado na devolução (`locacao.preco-hora` × tempo de uso) e também aparece no JSON do `GET /api/v1/locacoes/relatorio`, no campo `valor` (nulo enquanto a locação está ativa).
+
+### Testes
+`RelatorioPdfTest`: confere o status, o tipo `application/pdf` e que o arquivo começa com `%PDF-`, para ADMIN (200), CLIENTE (403), sem token (401) e com as tabelas vazias.

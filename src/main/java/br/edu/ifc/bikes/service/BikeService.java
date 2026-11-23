@@ -39,6 +39,12 @@ public class BikeService {
     }
 
     @Transactional(readOnly = true)
+    public BikeResponseDTO getByCodigo(String codigo) {
+        return bikeMapper.toResponse(bikeRepository.findByCodigo(codigo).orElseThrow(
+                () -> new EntityNotFoundException(String.format("Bike com código '%s' não encontrada", codigo))));
+    }
+
+    @Transactional(readOnly = true)
     public List<BikeResponseDTO> getAll() {
         return bikeMapper.toResponse(bikeRepository.findAll());
     }

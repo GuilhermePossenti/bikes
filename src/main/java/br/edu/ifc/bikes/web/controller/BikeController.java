@@ -85,6 +85,25 @@ public class BikeController {
         return ResponseEntity.ok(bikeService.getById(id));
     }
 
+    @Operation(summary = "Recuperar uma bike pelo código",
+            description = "Localiza a bike pelo código único (diferente do id). Requer perfil 'ADMIN'.",
+            parameters = @Parameter(name = "codigo", description = "Código da bike", required = true),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Recurso recuperado com sucesso",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = BikeResponseDTO.class))),
+                    @ApiResponse(responseCode = "401", description = "Usuário não autenticado",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
+                    @ApiResponse(responseCode = "403", description = "Recurso não permitido ao perfil CLIENTE",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
+                    @ApiResponse(responseCode = "404", description = "Bike não encontrada",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class)))
+            })
+    @GetMapping("/codigo/{codigo}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<BikeResponseDTO> getByCodigo(@PathVariable String codigo) {
+        return ResponseEntity.ok(bikeService.getByCodigo(codigo));
+    }
+
     @Operation(summary = "Listar todas as bikes",
             description = "Lista todas as bikes, com qualquer status. Requer perfil 'ADMIN'.",
             responses = {
